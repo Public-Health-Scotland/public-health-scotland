@@ -52,15 +52,15 @@ The "Featured projects" section shows four curated cards. Each entry:
 
 The "Packages" section is fully automated — no file in this repository controls it. It reads directly from GitHub at page load.
 
-**To add a package to the section:** open the repository on GitHub, go to the repository settings, and add the `r-packages` topic. The repository will appear on the landing page automatically.
+**To add a package to the section:** open the repository on GitHub, go to the repository settings, and add the `r-package` topic. The repository will appear on the landing page automatically.
 
 **To add a documentation link:** in the same repository settings page, set the "Website" field to the pkgdown (or other documentation) URL. If a Website URL is set, a "Documentation" button appears on the card linking directly to it.
 
-**To remove a package from the section:** remove the `package` topic from the repository. Archived repositories are excluded automatically.
+**To remove a package from the section:** remove the `r-package` topic from the repository. Archived repositories are excluded automatically.
 
 ## Technical notes
 
-**GitHub API:** all data is fetched client-side using the unauthenticated GitHub API (rate limit: 60 requests per IP per hour for the repository list; 30 searches per minute for the packages topic search). No API token is stored or required.
+**GitHub API:** all data is fetched client-side using the unauthenticated GitHub API (rate limit: 60 requests per IP per hour). The packages section is derived from the same organisation repo list as everything else — no separate search call is made. No API token is stored or required.
 
 **Documentation links:** the "Documentation" button on package cards links directly to whatever URL is set in the repository's "Website" field on GitHub. These are typically pkgdown sites deployed at `code.publichealthscotland.scot/<repo>/` via GitHub Pages, but any URL works.
 

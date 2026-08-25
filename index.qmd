@@ -42,7 +42,8 @@ allRepos = {
   while (true) {
     const r = await fetch(
       `https://api.github.com/orgs/Public-Health-Scotland/repos` +
-      `?per_page=100&page=${page}&type=public&sort=pushed`
+      `?per_page=100&page=${page}&type=public&sort=pushed`,
+      { headers: { "Accept": "application/vnd.github+json" } }
     );
     if (!r.ok) break;
     const batch = await r.json();
@@ -178,18 +179,13 @@ featuredData = await Promise.all(
 ```
 
 ```{ojs}
-// Repos tagged with the 'package' topic in the PHS org, sorted alphabetically
-packageRepos = {
-  const r = await fetch(
-    "https://api.github.com/search/repositories" +
-    "?q=org:Public-Health-Scotland+topic:r-packages&per_page=100"
-  );
-  if (!r.ok) return [];
-  const data = await r.json();
-  return (data.items || [])
-    .filter(repo => !repo.archived)
-    .sort((a, b) => a.name.localeCompare(b.name));
-}
+packageRepos = allRepos
+  .filter(repo =>
+    !repo.archived &&
+    Array.isArray(repo.topics) &&
+    repo.topics.includes("r-package")
+  )
+  .sort((a, b) => a.name.localeCompare(b.name))
 
 {
   const grid = document.getElementById("packages-grid");
@@ -197,7 +193,7 @@ packageRepos = {
   if (!packageRepos.length) {
     grid.innerHTML =
       `<p class="phs-repo-empty">No repositories are tagged with the
-       <code>r-packages</code> topic yet.
+       <code>r-package</code> topic yet.
        <a href="https://github.com/Public-Health-Scotland">View all on GitHub →</a></p>`;
     return;
   }
