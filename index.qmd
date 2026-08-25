@@ -24,3 +24,88 @@ pagetitle: "Public Health Scotland — Code"
   </div>
 </section>
 ```
+
+::: {.phs-stats}
+::: {.phs-inner}
+
+```{ojs}
+// Fetch org metadata (repo count)
+orgData = fetch("https://api.github.com/orgs/Public-Health-Scotland")
+  .then(r => r.ok ? r.json() : null)
+  .catch(() => null)
+
+// Fetch all public repos (paginated, 100 per page)
+// allRepos and langColour are used by Tasks 4 and 5 — do not redefine them.
+allRepos = {
+  const repos = [];
+  let page = 1;
+  while (true) {
+    const r = await fetch(
+      `https://api.github.com/orgs/Public-Health-Scotland/repos` +
+      `?per_page=100&page=${page}&type=public&sort=pushed`
+    );
+    if (!r.ok) break;
+    const batch = await r.json();
+    if (!Array.isArray(batch) || batch.length === 0) break;
+    repos.push(...batch);
+    page++;
+  }
+  return repos;
+}
+
+langColour = ({
+  R:          "#2166ac",
+  Python:     "#3572A5",
+  Vue:        "#42b883",
+  JavaScript: "#f1e05a",
+  TypeScript: "#3178c6",
+  Dockerfile: "#384d54"
+})
+
+totalStars = allRepos.reduce((n, r) => n + (r.stargazers_count || 0), 0)
+
+lastPushed = {
+  const dates = allRepos.map(r => r.pushed_at).filter(Boolean).sort().reverse();
+  if (!dates.length) return "—";
+  return new Date(dates[0]).toLocaleDateString("en-GB", {
+    day: "numeric", month: "short", year: "numeric"
+  });
+}
+
+// Render stats — hides the strip if all three values are missing
+{
+  const repoCount = orgData ? orgData.public_repos : allRepos.length;
+  const pairs = [
+    ["stat-repos",    repoCount.toLocaleString()],
+    ["stat-stars",    totalStars.toLocaleString()],
+    ["stat-updated",  lastPushed]
+  ];
+  const allMissing = pairs.every(([, v]) => !v || v === "0" || v === "—");
+  const strip = document.querySelector(".phs-stats");
+  if (strip) strip.style.display = allMissing ? "none" : "";
+  pairs.forEach(([id, val]) => {
+    const el = document.querySelector(`#${id} .phs-stat-value`);
+    if (el) el.textContent = val;
+  });
+}
+```
+
+```{=html}
+<div class="phs-stats-inner">
+  <div class="phs-stat" id="stat-repos">
+    <span class="phs-stat-value">—</span>
+    <span class="phs-stat-label">Public repositories</span>
+  </div>
+  <div class="phs-stat" id="stat-stars">
+    <span class="phs-stat-value">—</span>
+    <span class="phs-stat-label">Total stars</span>
+  </div>
+  <div class="phs-stat" id="stat-updated">
+    <span class="phs-stat-value">—</span>
+    <span class="phs-stat-label">Last updated</span>
+  </div>
+</div>
+```
+
+:::
+:::
