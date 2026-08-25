@@ -75,21 +75,15 @@ badgeTextColor = (hex) => {
 
 totalStars = allRepos.reduce((n, r) => n + (r.stargazers_count || 0), 0)
 
-lastPushed = {
-  const dates = allRepos.map(r => r.pushed_at).filter(Boolean).sort().reverse();
-  if (!dates.length) return "—";
-  return new Date(dates[0]).toLocaleDateString("en-GB", {
-    day: "numeric", month: "short", year: "numeric"
-  });
-}
+orgFollowers = orgData ? (orgData.followers || 0).toLocaleString() : "—"
 
 // Render stats — hides the strip if all three values are missing
 {
   const repoCount = orgData ? orgData.public_repos : allRepos.length;
   const pairs = [
-    ["stat-repos",    repoCount.toLocaleString()],
-    ["stat-stars",    totalStars.toLocaleString()],
-    ["stat-updated",  lastPushed]
+    ["stat-repos",      repoCount.toLocaleString()],
+    ["stat-stars",      totalStars.toLocaleString()],
+    ["stat-followers",  orgFollowers]
   ];
   const allMissing = pairs.every(([, v]) => !v || v === "0" || v === "—");
   const strip = document.querySelector(".phs-stats");
@@ -111,9 +105,9 @@ lastPushed = {
     <span class="phs-stat-value">—</span>
     <span class="phs-stat-label">Total stars</span>
   </div>
-  <div class="phs-stat" id="stat-updated">
+  <div class="phs-stat" id="stat-followers">
     <span class="phs-stat-value">—</span>
-    <span class="phs-stat-label">Last updated</span>
+    <span class="phs-stat-label">Followers</span>
   </div>
 </div>
 ```
@@ -168,6 +162,66 @@ featuredData = await Promise.all(
         <p class="phs-featured-card-desc">${repo.customDescription}</p>
         <span class="phs-featured-card-cta">View on GitHub →</span>
       </a>`;
+  }).join("");
+}
+```
+
+:::
+:::
+
+::: {.phs-packages}
+::: {.phs-inner}
+
+```{=html}
+<h2 class="phs-section-heading">Packages</h2>
+<div id="packages-grid" class="phs-packages-grid" aria-live="polite" aria-label="PHS packages"></div>
+```
+
+```{ojs}
+packageList = FileAttachment("packages.json").json()
+
+packageData = await Promise.all(
+  packageList.map(async (pkg) => {
+    const found = allRepos.find(r => r.name === pkg.repo);
+    if (found) return { ...found, ...pkg };
+    const r = await fetch(
+      `https://api.github.com/repos/Public-Health-Scotland/${pkg.repo}`
+    );
+    const data = r.ok ? await r.json() : { name: pkg.repo };
+    return { ...data, ...pkg };
+  })
+)
+
+{
+  const grid = document.getElementById("packages-grid");
+  if (!grid) return;
+  grid.innerHTML = packageData.map(pkg => {
+    const lang    = pkg.language || "R";
+    const colour  = langColour[lang] || "#2166ac";
+    const textCol = badgeTextColor(colour);
+    const stars   = (pkg.stargazers_count || 0).toLocaleString();
+    const ghUrl   = pkg.html_url ||
+                    `https://github.com/Public-Health-Scotland/${pkg.repo}`;
+    const docsLink = pkg.docs
+      ? `<a href="/${pkg.repo}/"
+            class="phs-package-link phs-package-link--docs"
+            aria-label="Read ${pkg.repo} documentation">Documentation</a>`
+      : "";
+    return `
+      <div class="phs-package-card" aria-labelledby="pkg-${pkg.repo}">
+        <div class="phs-package-card-top">
+          <span class="phs-lang-badge" style="background:${colour};color:${textCol}">${lang}</span>
+          <span class="phs-star-count" aria-label="${stars} stars">★ ${stars}</span>
+        </div>
+        <h3 class="phs-package-name" id="pkg-${pkg.repo}">${pkg.repo}</h3>
+        <p class="phs-package-desc">${pkg.description}</p>
+        <div class="phs-package-links">
+          <a href="${ghUrl}" target="_blank" rel="noopener"
+             class="phs-package-link phs-package-link--github"
+             aria-label="View ${pkg.repo} source on GitHub">GitHub source</a>
+          ${docsLink}
+        </div>
+      </div>`;
   }).join("");
 }
 ```

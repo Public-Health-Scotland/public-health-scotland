@@ -1,0 +1,22 @@
+[
+  {
+    "repo": "phsmethods",
+    "description": "Common methods for PHS analysts — CHI validation, age grouping, SMID lookups, and date utilities.",
+    "docs": true
+  },
+  {
+    "repo": "phsopendata",
+    "description": "Access Public Health Scotland open data via the CKAN API with a tidy R interface.",
+    "docs": true
+  },
+  {
+    "repo": "phsstyles",
+    "description": "ggplot2 themes and colour palettes aligned with PHS brand guidelines for publication-ready charts.",
+    "docs": true
+  },
+  {
+    "repo": "phsshiny",
+    "description": "Shiny development toolkit providing templates, components, and PHS brand theming for interactive dashboards.",
+    "docs": true
+  }
+]
