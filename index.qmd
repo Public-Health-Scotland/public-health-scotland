@@ -2,3 +2,25 @@
 title: ""
 pagetitle: "Public Health Scotland — Code"
 ---
+
+```{=html}
+<section class="phs-hero" aria-label="Introduction">
+  <div class="phs-inner phs-hero-inner">
+    <img src="assets/phs-logo-white.svg"
+         alt="Public Health Scotland"
+         class="phs-hero-logo">
+    <h1 class="phs-hero-heading">Open code for public health in Scotland</h1>
+    <p class="phs-hero-sub">
+      Reproducible analysis, open-source tools, and data science resources
+      from Public Health Scotland.
+    </p>
+    <div class="phs-hero-ctas">
+      <a href="#repo-grid"
+         class="btn btn-light btn-lg phs-btn-primary">Browse repositories</a>
+      <a href="https://github.com/Public-Health-Scotland/knowledge-base"
+         target="_blank" rel="noopener"
+         class="btn btn-outline-light btn-lg">Open Knowledge Base</a>
+    </div>
+  </div>
+</section>
+```
