@@ -5,6 +5,9 @@ project:
     - "*.qmd"
     - "!docs/"
 
+execute:
+  echo: false
+
 website:
   title: "Public Health Scotland — Code"
   repo-url: https://github.com/Public-Health-Scotland/public-health-scotland
