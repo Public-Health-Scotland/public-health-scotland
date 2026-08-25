@@ -336,14 +336,45 @@ main.content {
   align-items: flex-end;
   margin-bottom: 1.5rem;
 
-  // Observable Inputs outer label wrappers
-  label {
+  // Control group — a fieldset for the radios, a label for the other two
+  .phs-control {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    border: 0;
+    padding: 0;
+    margin: 0;
+  }
+
+  // Group label — resets Bootstrap's floated, oversized legend
+  legend,
+  .phs-control-label {
+    float: none;
+    width: auto;
+    padding: 0;
+    margin: 0;
     font-size: 1rem;
     font-weight: 600;
     color: #333333;
   }
 
-  // Text input (Inputs.text)
+  .phs-lang-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+    padding-top: 0.4375rem;
+
+    label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 1rem;
+      color: #333333;
+      cursor: pointer;
+    }
+  }
+
+  // Text input
   input[type="text"],
   input[type="search"] {
     border: 1px solid #b0aec0;
@@ -361,11 +392,11 @@ main.content {
     }
   }
 
-  // Select (Inputs.select)
+  // Select
   select {
     border: 1px solid #b0aec0;
     border-radius: 0.375rem;
-    padding: 0.4375rem 2.25rem 0.4375rem 0.75rem;
+    padding: 0.5rem 2.25rem 0.5rem 0.75rem;
     font-size: 1rem;
     color: #333333;
     background-color: #ffffff;
@@ -379,7 +410,7 @@ main.content {
     }
   }
 
-  // Radio buttons (Inputs.radio) — accent-color is the accessible cross-browser approach
+  // Radio buttons — accent-color is the accessible cross-browser approach
   input[type="radio"] {
     accent-color: #3f3685;
     width: 1rem;
@@ -469,10 +500,15 @@ main.content {
 
 .phs-repo-meta {
   display: flex;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
   font-size: 0.8125rem;
   color: #666666;
   margin-top: 0.25rem;
+
+  span {
+    white-space: nowrap;
+  }
 }
 
 .phs-repo-empty {
@@ -548,7 +584,14 @@ button:focus-visible {
   }
 }
 
-.phs-footer-licence {
+.phs-footer-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.phs-footer-licence,
+.phs-footer-updated {
   font-size: 0.875rem;
   color: rgba(255, 255, 255, 0.85); // 7.7:1 AAA on #3f3685
   margin: 0;

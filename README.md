@@ -6,26 +6,28 @@ Landing page for [code.publichealthscotland.scot](https://code.publichealthscotl
 
 A single-page Quarto website that:
 
-- Shows live organisation statistics from the GitHub API (repositories, stars, followers)
+- Shows organisation statistics from the GitHub API (repositories, stars, followers)
 - Displays curated featured projects
 - Lists PHS R and Python packages with links to source and documentation
 - Provides a searchable, filterable grid of all public repositories
 
-Content is fetched from the GitHub API on the client side and does not require a build step to stay current.
+Repository content is read from a snapshot of the GitHub API taken when the site is built, so the page itself makes no API calls.
 
 ## Local preview
 
-Install [Quarto](https://quarto.org/docs/get-started/), then from the repository root:
+Install [Quarto](https://quarto.org/docs/get-started/) and [Node](https://nodejs.org/) 18 or later, then from the repository root:
 
 ```bash
 quarto preview
 ```
 
-The site opens at `http://localhost:4848` by default. The GitHub API is called live during preview, so repository data reflects the current state of the organisation.
+The site opens at `http://localhost:4848` by default.
+
+Rendering runs `scripts/fetch-github-data.mjs` first, which writes `github-data.json` — the organisation snapshot the page reads. The file is not committed. A snapshot less than six hours old is reused rather than refetched, so repeated previews do not call the API; delete the file or set `GITHUB_DATA_MAX_AGE_HOURS=0` to force a refresh.
 
 ## Deployment
 
-Defined in `.github/workflows/deploy.yml`. Every push to `main` triggers a Quarto render and deploys the output to the `gh-pages` branch.
+Defined in `.github/workflows/deploy.yml`. Every push to `main` triggers a Quarto render and deploys the output to the `gh-pages` branch. The same workflow runs each morning at 06:00 UTC, and can be run on demand from the Actions tab, so the repository snapshot stays current without anyone pushing a commit.
 
 **First-time setup:** after the first successful workflow run, open the repository **Settings → Pages** and set the source branch to `gh-pages`. The custom domain (`code.publichealthscotland.scot`) is written to the `CNAME` file and is applied automatically on each deploy.
 
@@ -46,11 +48,12 @@ The "Featured projects" section shows four curated cards. Each entry:
 
 - `repo` must match the exact repository name in the `Public-Health-Scotland` GitHub organisation.
 - `description` is displayed on the card and overrides the GitHub repository description — write it in plain language, consistent in tone with the other entries.
-- Live metadata (stars, language, URL) is pulled from the GitHub API at page load.
+- Metadata (stars, language, URL) comes from the snapshot taken at build time.
+- An entry naming a repository that no longer exists still renders, without metadata.
 
 ## Packages section
 
-The "Packages" section is fully automated — no file in this repository controls it. It reads directly from GitHub at page load.
+The "Packages" section is fully automated — no file in this repository controls it. It is derived from the snapshot taken at build time, so a change on GitHub appears after the next deploy or daily refresh.
 
 **To add a package to the section:** open the repository on GitHub, go to the repository settings, and add the `r-package` topic. The repository will appear on the landing page automatically.
 
@@ -60,7 +63,9 @@ The "Packages" section is fully automated — no file in this repository control
 
 ## Technical notes
 
-**GitHub API:** all data is fetched client-side using the unauthenticated GitHub API (rate limit: 60 requests per IP per hour). The packages section is derived from the same organisation repo list as everything else — no separate search call is made. No API token is stored or required.
+**GitHub API:** `scripts/fetch-github-data.mjs` calls the API once per build, authenticated with the workflow's built-in `GITHUB_TOKEN`, and writes the fields the page needs to `github-data.json`. Visitors download that one file instead of making their own API calls, which is what the unauthenticated limit of 60 requests per IP per hour used to break on shared networks. If the API is unreachable during a build, an existing snapshot is kept and the deploy continues; with no snapshot at all the render fails rather than publishing an empty page.
+
+**Third-party code:** the page runs on the Observable standard library that Quarto bundles into the site. Observable Inputs is deliberately not used, because it is loaded from a public CDN at page load and takes the repository grid with it on networks that block one.
 
 **Documentation links:** the "Documentation" button on package cards links directly to whatever URL is set in the repository's "Website" field on GitHub. These are typically pkgdown sites deployed at `code.publichealthscotland.scot/<repo>/` via GitHub Pages, but any URL works.
 

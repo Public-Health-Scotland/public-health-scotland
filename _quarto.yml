@@ -1,6 +1,7 @@
 project:
   type: website
   output-dir: _site
+  pre-render: node scripts/fetch-github-data.mjs
   render:
     - "*.qmd"
     - "!docs/"
@@ -11,9 +12,12 @@ execute:
 
 website:
   title: "Public Health Scotland — Code"
-  repo-url: https://github.com/Public-Health-Scotland/public-health-scotland
+  description: "Reproducible analysis, open-source tools and data science resources from Public Health Scotland."
+  site-url: https://code.publichealthscotland.scot
+  repo-url: https://github.com/Public-Health-Scotland/public-health-scotland.github.io
   repo-actions: [issue]
   navbar: false
+  open-graph: true
 
 format:
   html:

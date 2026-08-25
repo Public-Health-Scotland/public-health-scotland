@@ -1,6 +1,7 @@
 ---
 title: ""
 pagetitle: "Public Health Scotland — Code"
+description: "Reproducible analysis, open-source tools and data science resources from Public Health Scotland."
 ---
 
 ```{=html}
@@ -29,30 +30,13 @@ pagetitle: "Public Health Scotland — Code"
 ::: {.phs-inner}
 
 ```{ojs}
-// Fetch org metadata (repo count)
-orgData = fetch("https://api.github.com/orgs/Public-Health-Scotland")
-  .then(r => r.ok ? r.json() : null)
-  .catch(() => null)
+// Organisation snapshot written at build time by scripts/fetch-github-data.mjs.
+// The page makes no GitHub API calls, so nothing shown here depends on the
+// visitor's share of the unauthenticated rate limit.
+githubData = FileAttachment("github-data.json").json()
 
-// Fetch all public repos (paginated, 100 per page)
-// allRepos and langColour are used by Tasks 4 and 5 — do not redefine them.
-allRepos = {
-  const repos = [];
-  let page = 1;
-  while (true) {
-    const r = await fetch(
-      `https://api.github.com/orgs/Public-Health-Scotland/repos` +
-      `?per_page=100&page=${page}&type=public&sort=pushed`,
-      { headers: { "Accept": "application/vnd.github+json" } }
-    );
-    if (!r.ok) break;
-    const batch = await r.json();
-    if (!Array.isArray(batch) || batch.length === 0) break;
-    repos.push(...batch);
-    page++;
-  }
-  return repos;
-}
+orgData  = githubData.org
+allRepos = githubData.repos
 
 langColour = ({
   R:          "#2166ac",
@@ -74,24 +58,24 @@ badgeTextColor = (hex) => {
   return L > 0.179 ? "#1b1b1b" : "#ffffff";
 }
 
+// Repository fields are interpolated into innerHTML, so escape anything that
+// comes from GitHub before it is written into the page.
+escapeHtml = (value) => String(value ?? "").replace(
+  /[&<>"']/g,
+  ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch])
+)
+
 totalStars = allRepos.reduce((n, r) => n + (r.stargazers_count || 0), 0)
 
-orgFollowers = orgData ? (orgData.followers || 0).toLocaleString() : "—"
-
-// Render stats — hides the strip if all three values are missing
 {
-  const repoCount = orgData ? orgData.public_repos : allRepos.length;
   const pairs = [
-    ["stat-repos",      repoCount.toLocaleString()],
-    ["stat-stars",      totalStars.toLocaleString()],
-    ["stat-followers",  orgFollowers]
+    ["stat-repos",      orgData.public_repos ?? allRepos.length],
+    ["stat-stars",      totalStars],
+    ["stat-followers",  orgData.followers ?? 0]
   ];
-  const allMissing = pairs.every(([, v]) => !v || v === "0" || v === "—");
-  const strip = document.querySelector(".phs-stats");
-  if (strip) strip.style.display = allMissing ? "none" : "";
   pairs.forEach(([id, val]) => {
     const el = document.querySelector(`#${id} .phs-stat-value`);
-    if (el) el.textContent = val;
+    if (el) el.textContent = val.toLocaleString();
   });
 }
 ```
@@ -127,19 +111,12 @@ orgFollowers = orgData ? (orgData.followers || 0).toLocaleString() : "—"
 ```{ojs}
 featuredList = FileAttachment("featured.json").json()
 
-// For each featured repo, look it up in allRepos first (already fetched);
-// only fall back to an individual API call if it isn't found there.
-featuredData = await Promise.all(
-  featuredList.map(async (item) => {
-    const found = allRepos.find(r => r.name === item.repo);
-    if (found) return { ...found, customDescription: item.description };
-    const r = await fetch(
-      `https://api.github.com/repos/Public-Health-Scotland/${item.repo}`
-    );
-    const data = r.ok ? await r.json() : { name: item.repo };
-    return { ...data, customDescription: item.description };
-  })
-)
+// Featured entries are matched against the snapshot; an entry naming a repo
+// that no longer exists still renders, without metadata.
+featuredData = featuredList.map(item => ({
+  ...(allRepos.find(r => r.name === item.repo) || { name: item.repo }),
+  customDescription: item.description
+}))
 
 {
   const grid = document.getElementById("featured-grid");
@@ -148,19 +125,20 @@ featuredData = await Promise.all(
     const lang    = repo.language || "Other";
     const colour  = langColour[lang] || "#666666";
     const textCol = badgeTextColor(colour);
-    const href    = repo.html_url ||
-                    `https://github.com/Public-Health-Scotland/${repo.name}`;
+    const name    = escapeHtml(repo.name);
+    const href    = escapeHtml(repo.html_url ||
+                    `https://github.com/Public-Health-Scotland/${repo.name}`);
     const stars   = (repo.stargazers_count || 0).toLocaleString();
     return `
       <a href="${href}" target="_blank" rel="noopener"
          class="phs-featured-card"
-         aria-label="View ${repo.name} on GitHub">
+         aria-label="View ${name} on GitHub">
         <div class="phs-featured-card-top">
-          <span class="phs-lang-badge" style="background:${colour};color:${textCol}">${lang}</span>
+          <span class="phs-lang-badge" style="background:${colour};color:${textCol}">${escapeHtml(lang)}</span>
           <span class="phs-star-count" aria-label="${stars} stars">★ ${stars}</span>
         </div>
-        <h3 class="phs-featured-card-name">${repo.name}</h3>
-        <p class="phs-featured-card-desc">${repo.customDescription}</p>
+        <h3 class="phs-featured-card-name">${name}</h3>
+        <p class="phs-featured-card-desc">${escapeHtml(repo.customDescription)}</p>
         <span class="phs-featured-card-cta">View on GitHub →</span>
       </a>`;
   }).join("");
@@ -201,25 +179,26 @@ packageRepos = allRepos
     const lang    = repo.language || "Other";
     const colour  = langColour[lang] || "#2166ac";
     const textCol = badgeTextColor(colour);
+    const name    = escapeHtml(repo.name);
     const stars   = (repo.stargazers_count || 0).toLocaleString();
-    const docsUrl = (repo.homepage || "").trim();
+    const docsUrl = escapeHtml((repo.homepage || "").trim());
     const docsLink = docsUrl
       ? `<a href="${docsUrl}" target="_blank" rel="noopener"
             class="phs-package-link phs-package-link--docs"
-            aria-label="Read ${repo.name} documentation">Documentation</a>`
+            aria-label="Read ${name} documentation">Documentation</a>`
       : "";
     return `
-      <div class="phs-package-card" aria-labelledby="pkg-${repo.name}">
+      <div class="phs-package-card" aria-labelledby="pkg-${name}">
         <div class="phs-package-card-top">
-          <span class="phs-lang-badge" style="background:${colour};color:${textCol}">${lang}</span>
+          <span class="phs-lang-badge" style="background:${colour};color:${textCol}">${escapeHtml(lang)}</span>
           <span class="phs-star-count" aria-label="${stars} stars">★ ${stars}</span>
         </div>
-        <h3 class="phs-package-name" id="pkg-${repo.name}">${repo.name}</h3>
-        <p class="phs-package-desc">${repo.description || ""}</p>
+        <h3 class="phs-package-name" id="pkg-${name}">${name}</h3>
+        <p class="phs-package-desc">${escapeHtml(repo.description)}</p>
         <div class="phs-package-links">
-          <a href="${repo.html_url}" target="_blank" rel="noopener"
+          <a href="${escapeHtml(repo.html_url)}" target="_blank" rel="noopener"
              class="phs-package-link phs-package-link--github"
-             aria-label="View ${repo.name} source on GitHub">GitHub source</a>
+             aria-label="View ${name} source on GitHub">GitHub source</a>
           ${docsLink}
         </div>
       </div>`;
@@ -236,20 +215,76 @@ packageRepos = allRepos
 ```{=html}
 <a id="repo-grid" class="phs-anchor" aria-hidden="true" tabindex="-1"></a>
 <h2 class="phs-section-heading">All repositories</h2>
+
+<div class="phs-repo-controls">
+  <fieldset class="phs-control">
+    <legend>Language</legend>
+    <div id="repo-lang" class="phs-lang-options"></div>
+  </fieldset>
+  <label class="phs-control" for="repo-search">
+    <span class="phs-control-label">Search</span>
+    <input type="search" id="repo-search"
+           placeholder="Filter by name or description…">
+  </label>
+  <label class="phs-control" for="repo-sort">
+    <span class="phs-control-label">Sort by</span>
+    <select id="repo-sort">
+      <option>Last updated</option>
+      <option>Most stars</option>
+      <option>Alphabetical</option>
+    </select>
+  </label>
+</div>
+
+<p id="repo-count" class="phs-repo-count" role="status" tabindex="-1"></p>
+<div id="repo-section-body"></div>
 ```
 
 ```{ojs}
-// Backing stores for filter state
-_langStore   = Inputs.input("All")
-_searchStore = Inputs.input("")
-_sortStore   = Inputs.input("Last updated")
-_pageStore   = Inputs.input(0)
+// Filter state is held in the controls themselves and read through the
+// Observable standard library, which Quarto bundles with the site. Observable
+// Inputs is deliberately not used: it is loaded from a public CDN at page
+// load, and the whole grid disappears on networks that block one.
+langFilter = Generators.observe(notify => {
+  const options = document.getElementById("repo-lang");
+  const read = () => options.querySelector("input:checked")?.value || "All";
+  const onChange = () => notify(read());
+  options.addEventListener("change", onChange);
+  notify(read());
+  return () => options.removeEventListener("change", onChange);
+})
 
-// Reactive values from the stores
-langFilter  = Generators.input(_langStore)
-searchQuery = Generators.input(_searchStore)
-sortOrder   = Generators.input(_sortStore)
-pageIndex   = Generators.input(_pageStore)
+searchQuery = Generators.input(document.getElementById("repo-search"))
+sortOrder   = Generators.input(document.getElementById("repo-sort"))
+
+// The current page has no control of its own, so it is held in a detached
+// input that the pagination buttons write to.
+_pageStore = {
+  const store = document.createElement("input");
+  store.type = "hidden";
+  store.value = "0";
+  store.set = (value) => {
+    store.value = value;
+    store.dispatchEvent(new Event("input"));
+  };
+  return store;
+}
+
+pageIndex = Generators.input(_pageStore)
+
+// Languages offered as filters, derived from the repositories themselves so
+// the options stay in step with what the organisation actually publishes.
+// Everything below the threshold is reachable through "Other".
+filterLanguages = {
+  const counts = new Map();
+  for (const repo of allRepos) {
+    if (repo.language) counts.set(repo.language, (counts.get(repo.language) || 0) + 1);
+  }
+  return [...counts]
+    .filter(([, n]) => n >= 3)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([lang]) => lang);
+}
 
 // Render filter controls and repo grid as one reactive section
 {
@@ -263,7 +298,7 @@ pageIndex   = Generators.input(_pageStore)
       const matchLang =
         langFilter === "All" ||
         (langFilter === "Other"
-          ? !["R", "Python", "Vue", "JavaScript", "TypeScript"].includes(rl)
+          ? !filterLanguages.includes(rl)
           : rl === langFilter);
       const matchSearch =
         !q ||
@@ -280,7 +315,7 @@ pageIndex   = Generators.input(_pageStore)
     });
 
   const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
-  const page      = Math.min(pageIndex, Math.max(0, pageCount - 1));
+  const page      = Math.min(Number(pageIndex), Math.max(0, pageCount - 1));
   const paged     = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   // Card HTML
@@ -288,19 +323,23 @@ pageIndex   = Generators.input(_pageStore)
     const lang    = repo.language || "Other";
     const colour  = langColour[lang] || "#666666";
     const textCol = badgeTextColor(colour);
-    const desc   = (repo.description || "").slice(0, 120);
+    const name    = escapeHtml(repo.name);
+    const full    = repo.description || "";
+    const desc    = full.length > 120
+      ? `${full.slice(0, 120).replace(/\s+\S*$/, "")}…`
+      : full;
     const pushed = new Date(repo.pushed_at).toLocaleDateString("en-GB", {
       day: "numeric", month: "short", year: "numeric"
     });
     const stars  = (repo.stargazers_count || 0).toLocaleString();
     return `
-      <a href="${repo.html_url}" target="_blank" rel="noopener"
-         class="phs-repo-card" aria-label="View ${repo.name} on GitHub">
+      <a href="${escapeHtml(repo.html_url)}" target="_blank" rel="noopener"
+         class="phs-repo-card" aria-label="View ${name} on GitHub">
         <div class="phs-repo-card-top">
-          <span class="phs-repo-name">${repo.name}</span>
-          <span class="phs-lang-badge" style="background:${colour};color:${textCol}">${lang}</span>
+          <span class="phs-repo-name">${name}</span>
+          <span class="phs-lang-badge" style="background:${colour};color:${textCol}">${escapeHtml(lang)}</span>
         </div>
-        <p class="phs-repo-desc">${desc || "<em>No description</em>"}</p>
+        <p class="phs-repo-desc">${escapeHtml(desc) || "<em>No description</em>"}</p>
         <div class="phs-repo-meta">
           <span aria-label="${stars} stars">★ ${stars}</span>
           <span>Updated ${pushed}</span>
@@ -328,64 +367,52 @@ pageIndex   = Generators.input(_pageStore)
 
   // Inject
   const container = document.getElementById("repo-section-body");
+  const summary   = document.getElementById("repo-count");
   if (!container) return;
 
+  summary.textContent = filtered.length === 0
+    ? ""
+    : `Showing ${paged.length} of ${filtered.length} repositories`;
+
   container.innerHTML = `
-    <p class="phs-repo-count">${
-      filtered.length === 0
-        ? ""
-        : `Showing ${paged.length} of ${filtered.length} repositories`
-    }</p>
     <div class="phs-repo-grid">${emptyHtml || cardHtml}</div>
     ${paginationHtml}`;
 
   // Wire pagination buttons
   container.querySelectorAll(".phs-page-btn:not([disabled])").forEach(btn => {
     btn.addEventListener("click", () => {
-      _pageStore.value = +btn.dataset.page;
-      _pageStore.dispatchEvent(new Event("input"));
+      const target   = +btn.dataset.page;
+      const forwards = target > page;
+      _pageStore.set(target);
+      // This button is destroyed by the re-render, which would drop keyboard
+      // focus back to the top of the document — move it to the equivalent
+      // control, or to the results summary once the button is disabled.
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        const buttons = container.querySelectorAll(".phs-page-btn");
+        const same    = buttons[forwards ? 1 : 0];
+        if (same && !same.disabled) same.focus();
+        else summary.focus();
+      }));
     });
   });
+}
+
+// Language options, drawn from the data rather than hard-coded
+{
+  const options = document.getElementById("repo-lang");
+  if (!options) return;
+  options.innerHTML = ["All", ...filterLanguages, "Other"].map((lang, i) => `
+    <label>
+      <input type="radio" name="repo-lang" value="${escapeHtml(lang)}"
+             ${i === 0 ? "checked" : ""}>
+      ${escapeHtml(lang)}
+    </label>`).join("");
 }
 
 // Reset to page 0 when filters change
 {
   langFilter; searchQuery; sortOrder;
-  _pageStore.value = 0;
-  _pageStore.dispatchEvent(new Event("input"));
-}
-```
-
-```{=html}
-<!-- Filter controls rendered by OJS via Inputs.bind into this container -->
-<div id="repo-controls" class="phs-repo-controls"></div>
-<div id="repo-section-body"></div>
-```
-
-```{ojs}
-// Render filter controls into the placeholder div.
-// Inputs.bind creates a new visible control bound to the backing store.
-{
-  const container = document.getElementById("repo-controls");
-  if (!container) return;
-
-  const langInput = Inputs.bind(
-    Inputs.radio(["All", "R", "Python", "Vue", "Other"], {
-      label: "Language", value: "All"
-    }),
-    _langStore
-  );
-  const searchInput = Inputs.bind(
-    Inputs.text({ label: "Search", placeholder: "Filter by name or description…" }),
-    _searchStore
-  );
-  const sortInput = Inputs.bind(
-    Inputs.select(["Last updated", "Most stars", "Alphabetical"], { label: "Sort by" }),
-    _sortStore
-  );
-
-  container.innerHTML = "";
-  container.append(langInput, searchInput, sortInput);
+  _pageStore.set(0);
 }
 ```
 
@@ -409,12 +436,30 @@ pageIndex   = Generators.input(_pageStore)
         GitHub organisation
       </a>
     </div>
-    <p class="phs-footer-licence">
-      Code published under the
-      <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
-         target="_blank" rel="noopener">Open Government Licence v3.0</a>
-      unless otherwise stated.
-    </p>
+    <div class="phs-footer-notes">
+      <p class="phs-footer-licence">
+        Code published under the
+        <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+           target="_blank" rel="noopener">Open Government Licence v3.0</a>
+        unless otherwise stated.
+      </p>
+      <p class="phs-footer-updated">
+        Repository data from GitHub, last updated
+        <time id="data-updated">—</time>.
+      </p>
+    </div>
   </div>
 </footer>
+```
+
+```{ojs}
+{
+  const el = document.getElementById("data-updated");
+  if (!el) return;
+  const generated = new Date(githubData.generated);
+  el.dateTime = githubData.generated;
+  el.textContent = generated.toLocaleDateString("en-GB", {
+    day: "numeric", month: "long", year: "numeric"
+  });
+}
 ```
