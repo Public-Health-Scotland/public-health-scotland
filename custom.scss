@@ -1,0 +1,61 @@
+/*-- scss:defaults --*/
+
+$font-family-sans-serif: "Source Sans 3", system-ui, -apple-system, sans-serif;
+$font-family-monospace:  "Source Code Pro", ui-monospace, monospace;
+$font-size-base:         1rem;
+$line-height-base:       1.5;
+$headings-font-weight:   600;
+$headings-color:         #3f3685;
+
+$primary:    #3f3685;
+$secondary:  #9b4394;
+$success:    #83bb26;
+$info:       #1e7f84;
+$warning:    #e08b1f;
+$danger:     #c73918;
+
+$body-bg:    #fafafb;
+$body-color: #333333;
+$link-color: #0078d4;
+
+$card-border-radius: 0.5rem;
+$border-radius:      0.5rem;
+
+/*-- scss:rules --*/
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
+
+// Remove Quarto's default page padding so sections can be full-bleed
+.page-layout-article > * {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+main.content {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+// Shared section inner wrapper (max-width + horizontal padding)
+.phs-inner {
+  max-width: 1290px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+// Shared section heading
+.phs-section-heading {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #3f3685;
+  margin-bottom: 2rem;
+}
+
+// Scroll anchor (invisible, gives href="#id" a landing target)
+.phs-anchor {
+  display: block;
+  height: 0;
+  visibility: hidden;
+}
