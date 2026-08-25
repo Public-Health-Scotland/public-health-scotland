@@ -323,3 +323,30 @@ pageIndex   = Generators.input(_pageStore)
 
 :::
 :::
+
+```{=html}
+<footer class="phs-footer" role="contentinfo">
+  <div class="phs-inner phs-footer-inner">
+    <div class="phs-footer-brand">
+      <img src="assets/phs-logo-white.svg"
+           alt="Public Health Scotland"
+           class="phs-footer-logo">
+    </div>
+    <div class="phs-footer-links">
+      <a href="mailto:phs.datascience@phs.scot">phs.datascience@phs.scot</a>
+      <a href="https://www.publichealthscotland.scot" target="_blank" rel="noopener">
+        publichealthscotland.scot
+      </a>
+      <a href="https://github.com/Public-Health-Scotland" target="_blank" rel="noopener">
+        GitHub organisation
+      </a>
+    </div>
+    <p class="phs-footer-licence">
+      Code published under the
+      <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+         target="_blank" rel="noopener">Open Government Licence v3.0</a>
+      unless otherwise stated.
+    </p>
+  </div>
+</footer>
+```

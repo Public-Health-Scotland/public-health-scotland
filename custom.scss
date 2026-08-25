@@ -350,3 +350,54 @@ main.content {
   font-size: 0.875rem;
   color: #666666;
 }
+
+// Footer
+.phs-footer {
+  background: #3f3685;
+  color: rgba(255, 255, 255, 0.85);
+  padding: 3rem 0;
+  margin-top: 0;
+}
+
+.phs-footer-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.phs-footer-logo {
+  height: 40px;
+  width: auto;
+  opacity: 0.9;
+}
+
+.phs-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+
+  a {
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    font-size: 0.9375rem;
+
+    &:hover {
+      color: #ffffff;
+      text-decoration: underline;
+    }
+  }
+}
+
+.phs-footer-licence {
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+
+  a {
+    color: rgba(255, 255, 255, 0.75);
+
+    &:hover {
+      color: #ffffff;
+    }
+  }
+}
