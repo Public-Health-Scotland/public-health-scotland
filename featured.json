@@ -1,0 +1,18 @@
+[
+  {
+    "repo": "technical-docs",
+    "description": "Technical documentation and best practice for PHS analysis"
+  },
+  {
+    "repo": "GitHub-guidance",
+    "description": "Guidance and best practice for using GitHub within Public Health Scotland"
+  },
+  {
+    "repo": "scotpho-profiles-tool",
+    "description": "ScotPHO profiles tool code"
+  },
+  {
+    "repo": "Hospital-Acute-Activity",
+    "description": "Code to create Public Health Scotland's Hospital Acute Care Activity publication"
+  }
+]
