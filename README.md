@@ -31,7 +31,7 @@ Defined in `.github/workflows/deploy.yml`. Every push to `main` triggers a Quart
 
 ## Updating curated content
 
-Two JSON files control the hand-picked sections. Edit them directly and push to `main`; the Actions workflow rebuilds and deploys automatically.
+One JSON file controls hand-picked content. Edit it directly and push to `main`; the Actions workflow rebuilds and deploys automatically.
 
 ### Featured projects — `featured.json`
 
@@ -48,29 +48,21 @@ The "Featured projects" section shows four curated cards. Each entry:
 - `description` is displayed on the card and overrides the GitHub repository description — write it in plain language, consistent in tone with the other entries.
 - Live metadata (stars, language, URL) is pulled from the GitHub API at page load.
 
-### Packages — `packages.json`
+## Packages section
 
-The "Packages" section lists PHS R and Python packages. Each entry:
+The "Packages" section is fully automated — no file in this repository controls it. It reads directly from GitHub at page load.
 
-```json
-{
-  "repo": "repository-name",
-  "description": "One sentence describing what the package does.",
-  "docs": true
-}
-```
+**To add a package to the section:** open the repository on GitHub, go to the repository settings, and add the `package` topic. The repository will appear on the landing page automatically.
 
-- `repo`: exact GitHub repository name.
-- `description`: plain-English description of the package.
-- `docs`: set to `true` if a documentation site is deployed and reachable at `code.publichealthscotland.scot/<repo>/`; set to `false` to omit the documentation link from the card.
+**To add a documentation link:** in the same repository settings page, set the "Website" field to the pkgdown (or other documentation) URL. If a Website URL is set, a "Documentation" button appears on the card linking directly to it.
 
-To add a package, append a new entry. To remove one, delete its entry. Entries are displayed in the order they appear in the file.
+**To remove a package from the section:** remove the `package` topic from the repository. Archived repositories are excluded automatically.
 
 ## Technical notes
 
-**GitHub API:** all data is fetched client-side using the unauthenticated GitHub API (rate limit: 60 requests per IP per hour). No API token is stored or required. The stats strip, featured section, packages section, and repository grid all share paginated repo data fetched once at page load.
+**GitHub API:** all data is fetched client-side using the unauthenticated GitHub API (rate limit: 60 requests per IP per hour for the repository list; 30 searches per minute for the packages topic search). No API token is stored or required.
 
-**Documentation links:** package documentation links use relative paths (`/<repo>/`) rather than absolute URLs. This works because all GitHub Pages sites under the `Public-Health-Scotland` organisation are served from the `code.publichealthscotland.scot` domain when the custom domain is active.
+**Documentation links:** the "Documentation" button on package cards links directly to whatever URL is set in the repository's "Website" field on GitHub. These are typically pkgdown sites deployed at `code.publichealthscotland.scot/<repo>/` via GitHub Pages, but any URL works.
 
 **Accessibility:** the site targets WCAG 2.2 AA compliance, aiming for AAA. Specifically: solid brand-colour backgrounds (no gradients), no all-capitals text, keyboard-navigable with visible 3px magenta focus rings, and dynamically chosen badge text colour to meet contrast requirements against all language colour backgrounds.
 

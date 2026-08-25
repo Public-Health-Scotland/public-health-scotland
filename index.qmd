@@ -178,47 +178,52 @@ featuredData = await Promise.all(
 ```
 
 ```{ojs}
-packageList = FileAttachment("packages.json").json()
-
-packageData = await Promise.all(
-  packageList.map(async (pkg) => {
-    const found = allRepos.find(r => r.name === pkg.repo);
-    if (found) return { ...found, ...pkg };
-    const r = await fetch(
-      `https://api.github.com/repos/Public-Health-Scotland/${pkg.repo}`
-    );
-    const data = r.ok ? await r.json() : { name: pkg.repo };
-    return { ...data, ...pkg };
-  })
-)
+// Repos tagged with the 'package' topic in the PHS org, sorted alphabetically
+packageRepos = {
+  const r = await fetch(
+    "https://api.github.com/search/repositories" +
+    "?q=org:Public-Health-Scotland+topic:package&per_page=100"
+  );
+  if (!r.ok) return [];
+  const data = await r.json();
+  return (data.items || [])
+    .filter(repo => !repo.archived)
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
 
 {
   const grid = document.getElementById("packages-grid");
   if (!grid) return;
-  grid.innerHTML = packageData.map(pkg => {
-    const lang    = pkg.language || "R";
+  if (!packageRepos.length) {
+    grid.innerHTML =
+      `<p class="phs-repo-empty">No repositories are tagged with the
+       <code>package</code> topic yet.
+       <a href="https://github.com/Public-Health-Scotland">View all on GitHub →</a></p>`;
+    return;
+  }
+  grid.innerHTML = packageRepos.map(repo => {
+    const lang    = repo.language || "Other";
     const colour  = langColour[lang] || "#2166ac";
     const textCol = badgeTextColor(colour);
-    const stars   = (pkg.stargazers_count || 0).toLocaleString();
-    const ghUrl   = pkg.html_url ||
-                    `https://github.com/Public-Health-Scotland/${pkg.repo}`;
-    const docsLink = pkg.docs
-      ? `<a href="/${pkg.repo}/"
+    const stars   = (repo.stargazers_count || 0).toLocaleString();
+    const docsUrl = (repo.homepage || "").trim();
+    const docsLink = docsUrl
+      ? `<a href="${docsUrl}" target="_blank" rel="noopener"
             class="phs-package-link phs-package-link--docs"
-            aria-label="Read ${pkg.repo} documentation">Documentation</a>`
+            aria-label="Read ${repo.name} documentation">Documentation</a>`
       : "";
     return `
-      <div class="phs-package-card" aria-labelledby="pkg-${pkg.repo}">
+      <div class="phs-package-card" aria-labelledby="pkg-${repo.name}">
         <div class="phs-package-card-top">
           <span class="phs-lang-badge" style="background:${colour};color:${textCol}">${lang}</span>
           <span class="phs-star-count" aria-label="${stars} stars">★ ${stars}</span>
         </div>
-        <h3 class="phs-package-name" id="pkg-${pkg.repo}">${pkg.repo}</h3>
-        <p class="phs-package-desc">${pkg.description}</p>
+        <h3 class="phs-package-name" id="pkg-${repo.name}">${repo.name}</h3>
+        <p class="phs-package-desc">${repo.description || ""}</p>
         <div class="phs-package-links">
-          <a href="${ghUrl}" target="_blank" rel="noopener"
+          <a href="${repo.html_url}" target="_blank" rel="noopener"
              class="phs-package-link phs-package-link--github"
-             aria-label="View ${pkg.repo} source on GitHub">GitHub source</a>
+             aria-label="View ${repo.name} source on GitHub">GitHub source</a>
           ${docsLink}
         </div>
       </div>`;
