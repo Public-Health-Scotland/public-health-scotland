@@ -52,7 +52,7 @@ The "Featured projects" section shows four curated cards. Each entry:
 
 The "Packages" section is fully automated — no file in this repository controls it. It reads directly from GitHub at page load.
 
-**To add a package to the section:** open the repository on GitHub, go to the repository settings, and add the `package` topic. The repository will appear on the landing page automatically.
+**To add a package to the section:** open the repository on GitHub, go to the repository settings, and add the `r-packages` topic. The repository will appear on the landing page automatically.
 
 **To add a documentation link:** in the same repository settings page, set the "Website" field to the pkgdown (or other documentation) URL. If a Website URL is set, a "Documentation" button appears on the card linking directly to it.
 
