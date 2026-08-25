@@ -229,3 +229,124 @@ main.content {
   color: #0078d4;
   margin-top: 0.5rem;
 }
+
+// Repo section
+.phs-repo-section {
+  background: #ffffff;
+  padding: 4rem 0;
+}
+
+.phs-repo-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+
+  // Style OJS Inputs labels
+  label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #666666;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.375rem;
+  }
+}
+
+.phs-repo-count {
+  font-size: 0.875rem;
+  color: #666666;
+  margin-bottom: 1rem;
+  min-height: 1.4em;
+}
+
+.phs-repo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+
+  @media (max-width: 991px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 575px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.phs-repo-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: #ffffff;
+  border: 1px solid #dfdde3;
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(63, 54, 133, 0.1);
+    border-color: #3f3685;
+    text-decoration: none;
+    color: inherit;
+  }
+}
+
+.phs-repo-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.phs-repo-name {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #3f3685;
+  word-break: break-word;
+}
+
+.phs-repo-desc {
+  font-size: 0.875rem;
+  color: #333333;
+  flex: 1;
+  margin: 0;
+
+  em {
+    color: #948da3;
+    font-style: normal;
+  }
+}
+
+.phs-repo-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8125rem;
+  color: #666666;
+  margin-top: 0.25rem;
+}
+
+.phs-repo-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem 0;
+  color: #666666;
+}
+
+// Pagination
+.phs-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding-top: 1rem;
+}
+
+.phs-page-info {
+  font-size: 0.875rem;
+  color: #666666;
+}

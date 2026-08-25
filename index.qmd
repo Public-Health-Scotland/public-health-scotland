@@ -162,3 +162,164 @@ featuredData = await Promise.all(
 
 :::
 :::
+
+::: {.phs-repo-section}
+::: {.phs-inner}
+
+```{=html}
+<a id="repo-grid" class="phs-anchor" aria-hidden="true" tabindex="-1"></a>
+<h2 class="phs-section-heading">All repositories</h2>
+```
+
+```{ojs}
+// Backing stores for filter state
+_langStore   = Inputs.input("All")
+_searchStore = Inputs.input("")
+_sortStore   = Inputs.input("Last updated")
+_pageStore   = Inputs.input(0)
+
+// Reactive values from the stores
+langFilter  = Generators.input(_langStore)
+searchQuery = Generators.input(_searchStore)
+sortOrder   = Generators.input(_sortStore)
+pageIndex   = Generators.input(_pageStore)
+
+// Render filter controls and repo grid as one reactive section
+{
+  const PAGE_SIZE = 24;
+
+  // Filter and sort allRepos
+  const q = searchQuery.trim().toLowerCase();
+  const filtered = allRepos
+    .filter(r => {
+      const rl = r.language || "Other";
+      const matchLang =
+        langFilter === "All" ||
+        (langFilter === "Other"
+          ? !["R", "Python", "Vue", "JavaScript", "TypeScript"].includes(rl)
+          : rl === langFilter);
+      const matchSearch =
+        !q ||
+        r.name.toLowerCase().includes(q) ||
+        (r.description || "").toLowerCase().includes(q);
+      return matchLang && matchSearch;
+    })
+    .sort((a, b) => {
+      if (sortOrder === "Most stars")
+        return (b.stargazers_count || 0) - (a.stargazers_count || 0);
+      if (sortOrder === "Alphabetical")
+        return a.name.localeCompare(b.name);
+      return new Date(b.pushed_at) - new Date(a.pushed_at);
+    });
+
+  const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
+  const page      = Math.min(pageIndex, Math.max(0, pageCount - 1));
+  const paged     = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  // Card HTML
+  const cardHtml = paged.map(repo => {
+    const lang   = repo.language || "Other";
+    const colour = langColour[lang] || "#666666";
+    const desc   = (repo.description || "").slice(0, 120);
+    const pushed = new Date(repo.pushed_at).toLocaleDateString("en-GB", {
+      day: "numeric", month: "short", year: "numeric"
+    });
+    const stars  = (repo.stargazers_count || 0).toLocaleString();
+    return `
+      <a href="${repo.html_url}" target="_blank" rel="noopener"
+         class="phs-repo-card" aria-label="View ${repo.name} on GitHub">
+        <div class="phs-repo-card-top">
+          <span class="phs-repo-name">${repo.name}</span>
+          <span class="phs-lang-badge" style="background:${colour}">${lang}</span>
+        </div>
+        <p class="phs-repo-desc">${desc || "<em>No description</em>"}</p>
+        <div class="phs-repo-meta">
+          <span aria-label="${stars} stars">★ ${stars}</span>
+          <span>Updated ${pushed}</span>
+        </div>
+      </a>`;
+  }).join("");
+
+  // Pagination HTML
+  const prevDisabled = page === 0 ? "disabled" : "";
+  const nextDisabled = page >= pageCount - 1 ? "disabled" : "";
+  const paginationHtml = pageCount > 1 ? `
+    <div class="phs-pagination">
+      <button class="btn btn-outline-primary btn-sm phs-page-btn" ${prevDisabled}
+        data-page="${page - 1}">← Previous</button>
+      <span class="phs-page-info">Page ${page + 1} of ${pageCount}</span>
+      <button class="btn btn-outline-primary btn-sm phs-page-btn" ${nextDisabled}
+        data-page="${page + 1}">Next →</button>
+    </div>` : "";
+
+  // Error / empty state
+  const emptyHtml = filtered.length === 0
+    ? `<p class="phs-repo-empty">No repositories match your filters.
+       <a href="https://github.com/Public-Health-Scotland">View all on GitHub →</a></p>`
+    : "";
+
+  // Inject
+  const container = document.getElementById("repo-section-body");
+  if (!container) return;
+
+  container.innerHTML = `
+    <p class="phs-repo-count">${
+      filtered.length === 0
+        ? ""
+        : `Showing ${paged.length} of ${filtered.length} repositories`
+    }</p>
+    <div class="phs-repo-grid">${emptyHtml || cardHtml}</div>
+    ${paginationHtml}`;
+
+  // Wire pagination buttons
+  container.querySelectorAll(".phs-page-btn:not([disabled])").forEach(btn => {
+    btn.addEventListener("click", () => {
+      _pageStore.value = +btn.dataset.page;
+      _pageStore.dispatchEvent(new Event("input"));
+    });
+  });
+}
+
+// Reset to page 0 when filters change
+{
+  langFilter; searchQuery; sortOrder;
+  _pageStore.value = 0;
+  _pageStore.dispatchEvent(new Event("input"));
+}
+```
+
+```{=html}
+<!-- Filter controls rendered by OJS via Inputs.bind into this container -->
+<div id="repo-controls" class="phs-repo-controls"></div>
+<div id="repo-section-body"></div>
+```
+
+```{ojs}
+// Render filter controls into the placeholder div.
+// Inputs.bind creates a new visible control bound to the backing store.
+{
+  const container = document.getElementById("repo-controls");
+  if (!container) return;
+
+  const langInput = Inputs.bind(
+    Inputs.radio(["All", "R", "Python", "Vue", "Other"], {
+      label: "Language", value: "All"
+    }),
+    _langStore
+  );
+  const searchInput = Inputs.bind(
+    Inputs.text({ label: "Search", placeholder: "Filter by name or description…" }),
+    _searchStore
+  );
+  const sortInput = Inputs.bind(
+    Inputs.select(["Last updated", "Most stars", "Alphabetical"], { label: "Sort by" }),
+    _sortStore
+  );
+
+  container.innerHTML = "";
+  container.append(langInput, searchInput, sortInput);
+}
+```
+
+:::
+:::
