@@ -109,3 +109,56 @@ lastPushed = {
 
 :::
 :::
+
+::: {.phs-featured}
+::: {.phs-inner}
+
+```{=html}
+<h2 class="phs-section-heading">Featured projects</h2>
+<div id="featured-grid" class="phs-featured-grid" aria-live="polite" aria-label="Featured projects"></div>
+```
+
+```{ojs}
+featuredList = FileAttachment("featured.json").json()
+
+// For each featured repo, look it up in allRepos first (already fetched);
+// only fall back to an individual API call if it isn't found there.
+featuredData = await Promise.all(
+  featuredList.map(async (item) => {
+    const found = allRepos.find(r => r.name === item.repo);
+    if (found) return { ...found, customDescription: item.description };
+    const r = await fetch(
+      `https://api.github.com/repos/Public-Health-Scotland/${item.repo}`
+    );
+    const data = r.ok ? await r.json() : { name: item.repo };
+    return { ...data, customDescription: item.description };
+  })
+)
+
+{
+  const grid = document.getElementById("featured-grid");
+  if (!grid) return;
+  grid.innerHTML = featuredData.map(repo => {
+    const lang    = repo.language || "Other";
+    const colour  = langColour[lang] || "#666666";
+    const href    = repo.html_url ||
+                    `https://github.com/Public-Health-Scotland/${repo.name}`;
+    const stars   = (repo.stargazers_count || 0).toLocaleString();
+    return `
+      <a href="${href}" target="_blank" rel="noopener"
+         class="phs-featured-card"
+         aria-label="View ${repo.name} on GitHub">
+        <div class="phs-featured-card-top">
+          <span class="phs-lang-badge" style="background:${colour}">${lang}</span>
+          <span class="phs-star-count" aria-label="${stars} stars">★ ${stars}</span>
+        </div>
+        <h3 class="phs-featured-card-name">${repo.name}</h3>
+        <p class="phs-featured-card-desc">${repo.customDescription}</p>
+        <span class="phs-featured-card-cta">View on GitHub →</span>
+      </a>`;
+  }).join("");
+}
+```
+
+:::
+:::

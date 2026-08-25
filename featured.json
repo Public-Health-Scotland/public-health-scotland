@@ -1,0 +1,18 @@
+[
+  {
+    "repo": "knowledge-base",
+    "description": "Guidance and training resources for data science practice at PHS"
+  },
+  {
+    "repo": "technical-docs",
+    "description": "Technical documentation and best practice for PHS analysis"
+  },
+  {
+    "repo": "Toolkit",
+    "description": "Templates and resources for reproducible publication pipelines"
+  },
+  {
+    "repo": "scotpho-indicator-production",
+    "description": "Code for producing ScotPHO public health indicator profiles"
+  }
+]

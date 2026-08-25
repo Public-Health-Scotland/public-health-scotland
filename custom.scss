@@ -150,3 +150,82 @@ main.content {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
+// Featured projects
+.phs-featured {
+  background: #f4f4f6;
+  padding: 4rem 0;
+}
+
+.phs-featured-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.phs-featured-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: #ffffff;
+  border: 1px solid #cccccc;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(63, 54, 133, 0.12);
+    border-color: #3f3685;
+    text-decoration: none;
+    color: inherit;
+  }
+}
+
+.phs-featured-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.phs-lang-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: $font-family-monospace;
+  color: #ffffff;
+  padding: 0.2em 0.65em;
+  border-radius: 1rem;
+  line-height: 1.4;
+}
+
+.phs-star-count {
+  font-size: 0.875rem;
+  color: #666666;
+}
+
+.phs-featured-card-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #3f3685;
+  margin: 0.25rem 0 0;
+}
+
+.phs-featured-card-desc {
+  font-size: 0.9375rem;
+  color: #333333;
+  flex: 1;
+  margin: 0;
+}
+
+.phs-featured-card-cta {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0078d4;
+  margin-top: 0.5rem;
+}
